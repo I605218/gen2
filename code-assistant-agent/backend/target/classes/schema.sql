@@ -1,0 +1,31 @@
+CREATE TABLE IF NOT EXISTS app_user (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    nickname VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_session (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(128) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS agent_conversation_history (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NULL,
+    session_id VARCHAR(64) NOT NULL,
+    request_type VARCHAR(32) NOT NULL,
+    task_type VARCHAR(32) NOT NULL,
+    user_prompt TEXT NOT NULL,
+    code_content MEDIUMTEXT NULL,
+    response_summary TEXT NOT NULL,
+    answer_content MEDIUMTEXT NOT NULL,
+    response_payload LONGTEXT NULL,
+    user_feedback VARCHAR(1000) NULL,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

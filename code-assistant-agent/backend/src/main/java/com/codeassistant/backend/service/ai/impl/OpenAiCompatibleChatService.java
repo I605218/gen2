@@ -81,7 +81,15 @@ public class OpenAiCompatibleChatService implements AiChatService {
     private OpenAiChatCompletionResponse sendChatCompletion(List<OpenAiMessage> messages,
                                                             Double temperature,
                                                             Integer maxTokens) {
-        if (!concurrencyLimiter.tryAcquire()) {
+        boolean acquired;
+        try {
+            // 最长等待 30 秒再放弃，避免评测批量调用时立即触发 429
+            acquired = concurrencyLimiter.tryAcquire(30, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AiBusyException(BUSY_MESSAGE);
+        }
+        if (!acquired) {
             throw new AiBusyException(BUSY_MESSAGE);
         }
 
