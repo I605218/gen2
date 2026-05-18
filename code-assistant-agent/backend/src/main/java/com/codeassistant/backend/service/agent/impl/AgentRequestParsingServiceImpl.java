@@ -52,7 +52,16 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
     }
 
     private String buildSystemPrompt() {
-        return "你是一个任务解析器。请把用户的自然语言请求解析为结构化 JSON，仅输出 JSON，不要输出解释。字段包括：taskType、question、language、errorMessage、knowledgePoint、practiceCount。taskType 只能是 GENERAL_CHAT、ERROR_EXPLANATION、CODE_REVIEW、ALGORITHM_GUIDE、PRACTICE_GENERATION 之一。若用户明确提到前端/页面/UI/组件/样式/React/Vue/HTML/CSS/JS/TS/表单/渲染/交互/路由/状态，优先识别为 CODE_REVIEW，并在 question 中保留用户原意。若用户明确提到后端/API/接口/Controller/Service/Repository/数据库/SQL/JPA/MyBatis/事务/登录/权限，优先识别为 CODE_REVIEW。若用户同时要求讲解算法思路、复杂度、伪代码、代码实现，即使提到了例题，也优先归类为 ALGORITHM_GUIDE。只有当用户主要目标是出题、练习、刷题时，才归类为 PRACTICE_GENERATION。无法确定的字段填 null。";
+        return "你是一个任务解析器。请把用户的自然语言请求解析为结构化 JSON，仅输出 JSON，不要输出解释。"
+                + "字段包括：taskType、question、language、errorMessage、knowledgePoint、practiceCount。"
+                + "taskType 只能是 GENERAL_CHAT、ERROR_EXPLANATION、CODE_REVIEW、ALGORITHM_GUIDE、PRACTICE_GENERATION 之一。"
+                + "分类规则（按优先级排序）："
+                + "1. 若用户描述报错、异常、error、exception、崩溃、不知道怎么修复等，归类为 ERROR_EXPLANATION；"
+                + "2. 若用户要求审查代码、分析代码质量/安全/潜在问题/重构，或消息中包含代码块（```），归类为 CODE_REVIEW；"
+                + "3. 若用户要求讲解算法思路、复杂度、伪代码、数据结构（排序/链表/树/图/动态规划/BFS/DFS/KMP/LRU等），归类为 ALGORITHM_GUIDE；"
+                + "4. 若用户主要目标是生成练习题、出题、刷题，归类为 PRACTICE_GENERATION；"
+                + "5. 其余情况归类为 GENERAL_CHAT。"
+                + "无法确定的字段填 null。";
     }
 
     private String buildUserPrompt(AgentAutoRequest request) {
@@ -97,30 +106,52 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
 
     private AgentTaskType fallbackTaskType(String message) {
         String text = message == null ? "" : message.toLowerCase();
-        if (text.contains("报错") || text.contains("异常") || text.contains("error") || text.contains("exception")) {
+
+        // 错误诊断：报错/异常类关键词
+        if (text.contains("报错") || text.contains("异常") || text.contains("error") || text.contains("exception")
+                || text.contains("nullpointer") || text.contains("出错") || text.contains("崩溃") || text.contains("失败")
+                || text.contains("问题") && (text.contains("修复") || text.contains("排查") || text.contains("原因"))) {
             return AgentTaskType.ERROR_EXPLANATION;
         }
-        if (text.contains("前端") || text.contains("页面") || text.contains("ui") || text.contains("组件") || text.contains("样式") || text.contains("react") || text.contains("vue") || text.contains("html") || text.contains("css") || text.contains("js") || text.contains("ts") || text.contains("表单") || text.contains("渲染") || text.contains("交互") || text.contains("路由") || text.contains("状态")) {
+
+        // 代码审查：审查/review/安全性相关，或包含代码片段标记
+        if (text.contains("审查") || text.contains("review") || text.contains("代码质量") || text.contains("潜在问题")
+                || text.contains("安全") || text.contains("重构") || text.contains("优化")
+                || text.contains("```") || text.contains("以下代码") || text.contains("这段代码")) {
             return AgentTaskType.CODE_REVIEW;
         }
-        if (text.contains("后端") || text.contains("api") || text.contains("接口") || text.contains("controller") || text.contains("service") || text.contains("repository") || text.contains("数据库") || text.contains("sql") || text.contains("jpa") || text.contains("mybatis") || text.contains("事务") || text.contains("登录") || text.contains("权限")) {
-            return AgentTaskType.CODE_REVIEW;
-        }
-        if (text.contains("算法") || text.contains("排序") || text.contains("伪代码") || text.contains("讲解") || text.contains("思路") || text.contains("时间复杂度")) {
+
+        // 算法指导：涉及算法讲解、复杂度、伪代码、数据结构等
+        if (text.contains("算法") || text.contains("排序") || text.contains("伪代码") || text.contains("讲解")
+                || text.contains("思路") || text.contains("时间复杂度") || text.contains("空间复杂度")
+                || text.contains("动态规划") || text.contains("二分") || text.contains("bfs") || text.contains("dfs")
+                || text.contains("链表") || text.contains("树") || text.contains("图") || text.contains("哈希")
+                || text.contains("滑动窗口") || text.contains("双指针") || text.contains("递归") || text.contains("分治")
+                || text.contains("kmp") || text.contains("lru") || text.contains("dijkstra") || text.contains("贪心")
+                || text.contains("搜索") || text.contains("遍历")) {
             return AgentTaskType.ALGORITHM_GUIDE;
         }
-        if (text.contains("练习") || text.contains("题目") || text.contains("刷题") || text.contains("例题") || text.contains("学习资源")) {
+
+        // 练习题生成：主要目标是出题
+        if (text.contains("生成") && (text.contains("练习题") || text.contains("题目") || text.contains("习题"))
+                || text.contains("出题") || text.contains("刷题")
+                || text.contains("练习题") || text.contains("给出") && text.contains("题")) {
             return AgentTaskType.PRACTICE_GENERATION;
         }
-        if (text.contains("前端") || text.contains("页面") || text.contains("ui") || text.contains("组件") || text.contains("样式") || text.contains("react") || text.contains("vue") || text.contains("html") || text.contains("css") || text.contains("前台")) {
+
+        // 前后端技术关键词兜底到代码审查
+        if (text.contains("前端") || text.contains("页面") || text.contains("ui") || text.contains("组件")
+                || text.contains("样式") || text.contains("react") || text.contains("vue") || text.contains("html")
+                || text.contains("css") || text.contains("表单") || text.contains("渲染") || text.contains("交互")) {
             return AgentTaskType.CODE_REVIEW;
         }
-        if (text.contains("后端") || text.contains("接口") || text.contains("controller") || text.contains("service") || text.contains("repository") || text.contains("数据库") || text.contains("sql") || text.contains("事务") || text.contains("权限") || text.contains("登录")) {
+        if (text.contains("后端") || text.contains("api") || text.contains("接口") || text.contains("controller")
+                || text.contains("service") || text.contains("repository") || text.contains("数据库")
+                || text.contains("sql") || text.contains("jpa") || text.contains("mybatis")
+                || text.contains("事务") || text.contains("登录") || text.contains("权限")) {
             return AgentTaskType.CODE_REVIEW;
         }
-        if (text.contains("优化") || text.contains("审查") || text.contains("review")) {
-            return AgentTaskType.CODE_REVIEW;
-        }
+
         return AgentTaskType.GENERAL_CHAT;
     }
 

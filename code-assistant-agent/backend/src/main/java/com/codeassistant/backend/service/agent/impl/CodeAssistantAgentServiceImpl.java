@@ -218,13 +218,22 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
 
     private boolean requiresToolObservation(AgentRequest request) {
         List<String> selectedTools = request.selectedTools();
-        return selectedTools != null && !selectedTools.isEmpty();
+        if (selectedTools != null && !selectedTools.isEmpty()) {
+            return true;
+        }
+        // 无显式指定时，只要存在支持该任务类型的工具即视为需要工具观察
+        return agentTools.stream().anyMatch(tool -> tool.supports(request.taskType()));
     }
 
     private List<AgentToolResult> runTools(AgentRequest request) {
         List<String> selectedTools = request.selectedTools();
+        // 若调用方未指定工具，根据任务类型自动选择适合的工具
         if (selectedTools == null || selectedTools.isEmpty()) {
-            return List.of();
+            return agentTools.stream()
+                    .filter(tool -> tool.supports(request.taskType()))
+                    .limit(3)
+                    .map(tool -> tool.execute(request))
+                    .toList();
         }
         return agentTools.stream()
                 .filter(tool -> tool.supports(request.taskType()))
@@ -272,12 +281,11 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
     }
 
     private boolean shouldRefine(AgentRequest request, String reflection, List<AgentToolResult> toolResults) {
+        // 仅当用户显式开启 reflexion 时才触发二次修正，避免默认双倍 LLM 调用
         if (Boolean.TRUE.equals(request.enableReflexion())) {
             return true;
         }
-        if (toolResults.isEmpty()) {
-            return true;
-        }
+        // 反思文本中明确指出需要重规划时触发
         return reflection.contains("重规划") || reflection.contains("进一步补强");
     }
 
@@ -291,7 +299,7 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
         messages.add(new OpenAiMessage("system", buildSystemPrompt()));
         messages.add(new OpenAiMessage("user", buildUserPrompt(request, planSteps, reasoningSteps, toolResults, actionTraces, reflection)));
 
-        AiChatResponse response = aiChatService.chatWithMessages(messages, 0.35, 2600);
+        AiChatResponse response = aiChatService.chatWithMessages(messages, 0.35, resolveMaxTokens(request.taskType()));
         return response.content();
     }
 
@@ -303,7 +311,15 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
         List<OpenAiMessage> messages = new ArrayList<>();
         messages.add(new OpenAiMessage("system", "你是一个执行 reflexion 的编程学习助手，请在保留正确内容的前提下补强答案的准确性、完整性与教学性。"));
         messages.add(new OpenAiMessage("user", buildRefinePrompt(request, planSteps, toolResults, previousAnswer, reflection)));
-        return aiChatService.chatWithMessages(messages, 0.25, 2600).content();
+        return aiChatService.chatWithMessages(messages, 0.25, resolveMaxTokens(request.taskType())).content();
+    }
+
+    private int resolveMaxTokens(AgentTaskType taskType) {
+        return switch (taskType) {
+            case ALGORITHM_GUIDE, PRACTICE_GENERATION -> 4096;
+            case CODE_REVIEW -> 3200;
+            default -> 2600;
+        };
     }
 
     private String buildSystemPrompt() {
