@@ -1,0 +1,280 @@
+{
+  "datasets": [
+    {
+      "name": "通用编程问答评测集 v1",
+      "description": "评估 Agent 对通用编程概念、语言特性和最佳实践问题的回答质量。适用于 GENERAL_CHAT 类任务。",
+      "items": [
+        {
+          "input": "什么是面向对象编程中的多态？请用 Java 或 Python 举例说明。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "Python 中的列表（list）和元组（tuple）有什么区别？各自适用于什么场景？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "请解释 RESTful API 的设计原则，并给出一个简单的示例。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "Git 中的 rebase 和 merge 有什么区别？在团队协作中应该如何选择？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "什么是数据库索引？为什么它能提升查询性能？有哪些常见的索引类型？",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请比较 HTTP/1.1 和 HTTP/2 的主要区别，以及 HTTP/3 带来了哪些改进。",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "在 Java 中，final、finally、finalize 分别是什么意思？各有什么用途？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "什么是 Docker 容器？它与虚拟机有什么本质区别？请用通俗的语言解释。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "如何理解进程和线程的区别？多线程编程中有哪些常见的同步问题？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "Python 装饰器（decorator）的原理是什么？请写一个简单的装饰器示例并解释其执行流程。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        }
+      ]
+    },
+    {
+      "name": "错误诊断评测集 v1",
+      "description": "评估 Agent 对各种编程错误的诊断能力和修复建议质量。适用于 ERROR_EXPLANATION 类任务。",
+      "items": [
+        {
+          "input": "程序运行时报错：java.lang.NullPointerException at com.example.UserService.getUser(UserService.java:25)。请分析可能的原因并给出修复方案。",
+          "expected_output": null,
+          "expected_tools": ["error-keyword-tool"]
+        },
+        {
+          "input": "代码报错：IndexError: list index out of range，发生在一个 for 循环中，索引 i 从 0 到 len(arr)。请帮我排查原因。",
+          "expected_output": null,
+          "expected_tools": ["error-keyword-tool"]
+        },
+        {
+          "input": "Python 代码出现 SyntaxError: invalid syntax，错误指向第 15 行的一个函数定义 def my_func(): 之前的一行。可能是什么原因？",
+          "expected_output": null,
+          "expected_tools": ["error-keyword-tool"]
+        },
+        {
+          "input": "Spring Boot 应用启动时报错：Error creating bean with name 'dataSource'。这可能是什么配置问题？如何排查？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "前端请求后端 API 时控制台显示 CORS 错误：Access-Control-Allow-Origin header is missing。这是什么问题？如何解决？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "MySQL 查询报错：Error Code: 1054. Unknown column 'user_name' in 'field list'。我的表里明明有这个字段。",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "使用 Git push 时提示：error: failed to push some refs, Updates were rejected because the remote contains work。如何安全地解决这个冲突？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "Java 编译错误：cannot find symbol, symbol: method getUserId(), location: variable user of type User。User 类中确实没有这个方法，但我不确定应该怎么修改。",
+          "expected_output": null,
+          "expected_tools": null
+        }
+      ]
+    },
+    {
+      "name": "代码审查评测集 v1",
+      "description": "评估 Agent 对代码质量、复杂度、潜在缺陷的审查能力。适用于 CODE_REVIEW 类任务。",
+      "items": [
+        {
+          "input": "请审查以下代码的质量：\n\n```java\npublic int calculate(int[] arr) {\n    int result = 0;\n    for (int i = 0; i < arr.length; i++) {\n        for (int j = 0; j < arr.length; j++) {\n            for (int k = 0; k < arr.length; k++) {\n                if (arr[i] + arr[j] == arr[k]) {\n                    result++;\n                }\n            }\n        }\n    }\n    return result;\n}\n```\n\n请指出时间复杂度和可改进之处。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool"]
+        },
+        {
+          "input": "请审查以下代码的问题：\n\n```python\ndef get_user_name(user):\n    return user.name.upper()\n\ndef process_users(users):\n    for user in users:\n        print(get_user_name(user))\n```\n\n如果 users 列表中可能包含 None 值，这段代码有什么风险？",
+          "expected_output": null,
+          "expected_tools": ["error-keyword-tool", "code-complexity-tool"]
+        },
+        {
+          "input": "审查以下代码的可读性和最佳实践：\n\n```javascript\nfunction f(x, y, z) {\n    var a = x + y;\n    var b = a * z;\n    if (b > 100) {\n        return b - 50;\n    } else if (b > 50) {\n        return b - 20;\n    } else {\n        return b;\n    }\n}\n```\n\n请给出重构建议。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool"]
+        },
+        {
+          "input": "审查以下 SQL 相关代码，找出潜在问题：\n\n```java\nString query = \"SELECT * FROM users WHERE name = '\" + userName + \"'\";\nStatement stmt = connection.createStatement();\nResultSet rs = stmt.executeQuery(query);\n```",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "审查以下 Python 代码，关注异常处理和资源管理：\n\n```python\ndef read_file(path):\n    f = open(path, 'r')\n    data = f.read()\n    f.close()\n    return json.loads(data)\n```",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "审查以下并发相关代码：\n\n```java\npublic class Counter {\n    private int count = 0;\n    \n    public void increment() {\n        count++;\n    }\n    \n    public int getCount() {\n        return count;\n    }\n}\n```\n\n在多线程环境下使用有什么问题？如何修复？",
+          "expected_output": null,
+          "expected_tools": null
+        }
+      ]
+    },
+    {
+      "name": "算法指导评测集 v1",
+      "description": "评估 Agent 对算法的讲解能力，包括思路分析、复杂度推导和例题设计。适用于 ALGORITHM_GUIDE 类任务。",
+      "items": [
+        {
+          "input": "请讲解快速排序（Quick Sort）算法的核心思想、时间复杂度，并给出 Java 实现。最后提供至少 3 道相关练习题。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool", "learning-resource-tool"]
+        },
+        {
+          "input": "动态规划（Dynamic Programming）的核心思想是什么？请以背包问题为例，讲解如何从递归到动态规划的推导过程。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "如何判断一个单链表是否有环？请给出至少两种解法，并分析各自的时间复杂度和空间复杂度。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool"]
+        },
+        {
+          "input": "请讲解二分查找算法的原理、适用条件和常见变体（如查找第一个等于给定值的元素）。给出 Python 实现。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "图的遍历：BFS 和 DFS 有什么区别？分别适用于什么场景？请给出两者的伪代码和实际应用举例。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请讲解 LRU（Least Recently Used）缓存淘汰算法的实现思路。如何用哈希表 + 双向链表实现 O(1) 的访问和插入？",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool"]
+        },
+        {
+          "input": "什么是 Dijkstra 最短路径算法？它和 A* 算法有什么不同？请比较两者的适用场景。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请讲解字符串匹配算法 KMP 的核心思想，特别是 next 数组的含义和构建过程。",
+          "expected_output": null,
+          "expected_tools": null
+        }
+      ]
+    },
+    {
+      "name": "练习题生成评测集 v1",
+      "description": "评估 Agent 围绕知识点分层生成练习题的能力。适用于 PRACTICE_GENERATION 类任务。",
+      "items": [
+        {
+          "input": "请生成 5 道关于二叉树的练习题，要求包含基础题、提高题和至少 1 道编程题。知识点覆盖：遍历、查找、插入。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "围绕 Python 闭包（closure）和装饰器（decorator）生成 3 道练习题，从概念理解到实际应用。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请为「SQL 多表连接查询」这个知识点生成 4 道练习题，覆盖 INNER JOIN、LEFT JOIN、子查询等常见场景。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "关于 Java 并发编程，请生成 5 道练习题，由浅入深覆盖 synchronized、volatile、线程池的使用。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请围绕「设计模式」中的单例模式和工厂模式生成 4 道练习题，要求包含代码实现题和场景分析题。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "关于计算机网络 TCP 三次握手和四次挥手，生成 3 道练习题，包含概念题、场景分析题和编程题。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        }
+      ]
+    },
+    {
+      "name": "综合评测集 v1",
+      "description": "覆盖所有任务类型的综合评测集，用于全面评估 Agent 的各项能力。包含通用问答、错误诊断、代码审查、算法指导和练习题生成。",
+      "items": [
+        {
+          "input": "什么是微服务架构？与单体架构相比有哪些优缺点？请给出一个简单的微服务拆分示例。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "Java 中出现 ConcurrentModificationException 异常，我在 foreach 循环中删除 ArrayList 的元素。为什么会报错？如何正确删除？",
+          "expected_output": null,
+          "expected_tools": ["error-keyword-tool"]
+        },
+        {
+          "input": "审查以下代码并指出所有潜在问题：\n\n```python\ndef process_data(data):\n    result = []\n    for i in range(len(data)):\n        for j in range(i, len(data)):\n            if data[i] > data[j]:\n                data[i], data[j] = data[j], data[i]\n        result.append(data[i])\n    return result\n```",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool"]
+        },
+        {
+          "input": "请讲解归并排序（Merge Sort）算法，包括分治思想的运用、时间复杂度推导和空间复杂度分析。给出 Python 实现和至少 3 道练习题。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool", "learning-resource-tool"]
+        },
+        {
+          "input": "为「Spring Boot 依赖注入」这个知识点生成分层练习题（基础、提高、实战），至少 4 道，并包含 1 道编程题。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请比较 TCP 和 UDP 的区别，说明各自适合的应用场景，并给出一个简单的 Socket 编程示例。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "程序报错：OutOfMemoryError: Java heap space。我启动了 JVM 参数 -Xmx256m。这可能是什么原因？如何排查和优化？",
+          "expected_output": null,
+          "expected_tools": null
+        },
+        {
+          "input": "什么是 CAP 定理？在分布式系统设计中，如何根据业务需求在一致性、可用性和分区容错性之间做权衡？请举例说明。",
+          "expected_output": null,
+          "expected_tools": ["learning-resource-tool"]
+        },
+        {
+          "input": "请讲解滑动窗口算法在解决子数组/子字符串问题中的应用。以「无重复字符的最长子串」为例，给出详细的思路分析、伪代码和 Java 实现。",
+          "expected_output": null,
+          "expected_tools": ["code-complexity-tool", "learning-resource-tool"]
+        },
+        {
+          "input": "请审查以下代码的安全性：\n\n```javascript\napp.get('/user', (req, res) => {\n    const id = req.query.id;\n    const sql = `SELECT * FROM users WHERE id = ${id}`;\n    db.query(sql, (err, result) => {\n        res.json(result);\n    });\n});\n```\n\n请指出安全风险并给出修复方案。",
+          "expected_output": null,
+          "expected_tools": null
+        }
+      ]
+    }
+  ]
+}
