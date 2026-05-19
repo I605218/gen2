@@ -17,9 +17,14 @@ import json
 import time
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 
-import urllib.request
-import urllib.error
+import requests
+
+
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """每个请求在独立线程中处理，支持并发"""
+    daemon_threads = True
 
 
 AGENT_URL = "http://localhost:8080"
@@ -29,16 +34,15 @@ def call_agent(input_text: str) -> dict:
     """调用 code-assistant-agent 的 auto-execute 接口"""
     payload = {
         "message": input_text,
-        "enableReflexion": True,
+        "enableReflexion": False,
     }
-    req = urllib.request.Request(
+    resp = requests.post(
         f"{AGENT_URL}/api/agent/auto-execute",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
+        json=payload,
+        timeout=180,
     )
-    with urllib.request.urlopen(req, timeout=180) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    resp.raise_for_status()
+    return resp.json()
 
 
 def convert_response(agent_resp: dict) -> dict:
@@ -113,11 +117,10 @@ class AdapterHandler(BaseHTTPRequestHandler):
 
             self._send_json(200, converted)
 
-        except urllib.error.HTTPError as e:
-            body = e.read().decode("utf-8", errors="replace")
-            print(f"[{time.strftime('%H:%M:%S')}] Agent 错误: HTTP {e.code} — {body[:200]}")
+        except requests.HTTPError as e:
+            print(f"[{time.strftime('%H:%M:%S')}] Agent 错误: HTTP {e.response.status_code} — {e.response.text[:200]}")
             self._send_json(502, {
-                "output": f"[Agent 返回错误] HTTP {e.code}",
+                "output": f"[Agent 返回错误] HTTP {e.response.status_code}",
                 "steps": [],
                 "tokens": 0,
                 "tool_calls": [],
@@ -176,7 +179,7 @@ def main():
     print(f"  eval 平台 agent_url 填写: http://localhost:{args.port}")
     print()
 
-    server = HTTPServer(("0.0.0.0", args.port), AdapterHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", args.port), AdapterHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

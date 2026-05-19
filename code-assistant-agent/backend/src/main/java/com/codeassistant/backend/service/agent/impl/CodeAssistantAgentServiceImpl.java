@@ -316,9 +316,9 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
 
     private int resolveMaxTokens(AgentTaskType taskType) {
         return switch (taskType) {
-            case ALGORITHM_GUIDE, PRACTICE_GENERATION -> 4096;
-            case CODE_REVIEW -> 3200;
-            default -> 2600;
+            case ALGORITHM_GUIDE, PRACTICE_GENERATION -> 1500;
+            case CODE_REVIEW -> 1200;
+            default -> 1024;
         };
     }
 
