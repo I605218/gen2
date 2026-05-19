@@ -29,15 +29,15 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
 
     @Override
     public AgentRequest parse(AgentAutoRequest request) {
-        AgentParseResult parsed = parseWithModel(request);
+        AgentTaskType taskType = fallbackTaskType(request.message());
         return new AgentRequest(
-                parsed.taskType() == null ? fallbackTaskType(request.message()) : parsed.taskType(),
-                StringUtils.hasText(parsed.question()) ? parsed.question() : request.message(),
+                taskType,
+                request.message(),
                 request.code(),
-                normalize(parsed.language()),
-                normalize(parsed.errorMessage()),
-                normalize(parsed.knowledgePoint()),
-                parsed.practiceCount(),
+                null,
+                null,
+                null,
+                null,
                 request.enableReflexion(),
                 request.selectedTools()
         );
@@ -47,7 +47,7 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
         List<OpenAiMessage> messages = new ArrayList<>();
         messages.add(new OpenAiMessage("system", buildSystemPrompt()));
         messages.add(new OpenAiMessage("user", buildUserPrompt(request)));
-        AiChatResponse response = aiChatService.chatWithMessages(messages, 0.1, 600);
+        AiChatResponse response = aiChatService.chatWithMessages(messages, 0.1, 300);
         return parseJsonResult(response.content(), request.message());
     }
 
