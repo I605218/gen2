@@ -28,7 +28,7 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
     }
 
     @Override
-    public AgentRequest parse(AgentAutoRequest request) {
+    public AgentRequest parse(AgentAutoRequest request, Long userId) {
         AgentTaskType taskType = fallbackTaskType(request.message());
         return new AgentRequest(
                 taskType,
@@ -39,7 +39,8 @@ public class AgentRequestParsingServiceImpl implements AgentRequestParsingServic
                 null,
                 null,
                 request.enableReflexion(),
-                request.selectedTools()
+                request.selectedTools(),
+                userId
         );
     }
 

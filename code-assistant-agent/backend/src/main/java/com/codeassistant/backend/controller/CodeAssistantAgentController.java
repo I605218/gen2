@@ -54,7 +54,7 @@ public class CodeAssistantAgentController {
                                      @RequestHeader(value = "X-Session-Id", required = false) String sessionId,
                                      @Valid @RequestBody AgentAutoRequest request) {
         AuthSessionUser user = authService.resolveUser(authorizationHeader);
-        AgentRequest parsedRequest = agentRequestParsingService.parse(request);
+        AgentRequest parsedRequest = agentRequestParsingService.parse(request, user != null ? user.id() : null);
         AgentResponse response = codeAssistantAgentService.execute(parsedRequest);
         agentWorkspaceService.saveExecution(user != null ? user.id() : null, resolveSessionId(sessionId), NATURAL_LANGUAGE_REQUEST, request.message(), request.code(), response);
         return response;

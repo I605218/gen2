@@ -5,5 +5,5 @@ import com.codeassistant.backend.dto.agent.AgentRequest;
 
 public interface AgentRequestParsingService {
 
-    AgentRequest parse(AgentAutoRequest request);
+    AgentRequest parse(AgentAutoRequest request, Long userId);
 }

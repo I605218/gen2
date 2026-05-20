@@ -20,12 +20,57 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService {
 
     private static final List<String> FRAMEWORKS = List.of("plan-and-execute", "ReAct-style", "reflexion");
+
+    private static final Map<AgentTaskType, String> BUILTIN_SKILLS = Map.of(
+        AgentTaskType.ALGORITHM_GUIDE,
+            "【算法讲解规范】\n" +
+            "必须包含以下五部分，缺一不可：\n" +
+            "1. 基本思想：用自然语言描述核心逻辑，不超过3句话；\n" +
+            "2. 时间/空间复杂度：给出最好、平均、最坏三种情况；\n" +
+            "3. 伪代码：结构化描述，不依赖特定语言语法；\n" +
+            "4. 代码实现：完整可运行，包含注释，优先使用 Java 或 Python；\n" +
+            "5. 例题练习：至少3道，含1道编程题，标注难度。",
+
+        AgentTaskType.CODE_REVIEW,
+            "【代码审查规范】\n" +
+            "按以下优先级逐项检查：\n" +
+            "1. 安全性：SQL注入、XSS、未校验输入、权限漏洞；\n" +
+            "2. 异常处理：未捕获异常、空指针防御；\n" +
+            "3. 边界条件：空集合、空字符串、并发竞态；\n" +
+            "4. 性能：N+1查询、不必要的循环嵌套；\n" +
+            "5. 可读性：命名清晰、单一职责；\n" +
+            "每个问题给出具体位置和修复建议。",
+
+        AgentTaskType.ERROR_EXPLANATION,
+            "【错误诊断规范】\n" +
+            "按以下顺序逐层排查：\n" +
+            "1. Controller层：参数校验、路由匹配、权限拦截；\n" +
+            "2. Service层：空指针、集合越界、类型转换；\n" +
+            "3. Repository层：SQL语句、参数绑定；\n" +
+            "4. 数据库层：连接配置、事务边界、字段类型；\n" +
+            "给出确定性结论和修复示例代码，不要只说可能是。",
+
+        AgentTaskType.PRACTICE_GENERATION,
+            "【练习题生成规范】\n" +
+            "每套题目结构：填空题2道、选择题2道、编程题1-2道；\n" +
+            "难度分布：基础40%、中等40%、进阶20%；\n" +
+            "每题附答案和解析，编程题附参考代码；\n" +
+            "题目贴近实际开发场景，优先考察理解和应用能力。",
+
+        AgentTaskType.GENERAL_CHAT,
+            "【回答格式规范】\n" +
+            "1. 先给结论再展开解释；\n" +
+            "2. 代码示例包含注释；\n" +
+            "3. 结构清晰，使用标题和分点；\n" +
+            "4. 代码优先使用 Java 或 Python。"
+    );
 
     private final AiChatService aiChatService;
     private final List<AgentTool> agentTools;
@@ -297,7 +342,9 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
                                   String reflection) {
         List<OpenAiMessage> messages = new ArrayList<>();
         messages.add(new OpenAiMessage("system", buildSystemPrompt()));
-        messages.add(new OpenAiMessage("user", buildUserPrompt(request, planSteps, reasoningSteps, toolResults, actionTraces, reflection)));
+        String userPrompt = buildUserPrompt(request, planSteps, reasoningSteps, toolResults, actionTraces, reflection);
+        userPrompt = appendSkillConstraints(request, userPrompt);
+        messages.add(new OpenAiMessage("user", userPrompt));
 
         AiChatResponse response = aiChatService.chatWithMessages(messages, 0.35, resolveMaxTokens(request.taskType()));
         return response.content();
@@ -324,6 +371,14 @@ public class CodeAssistantAgentServiceImpl implements CodeAssistantAgentService 
 
     private String buildSystemPrompt() {
         return "你是一个代码助手 Agent，需要有机结合 plan-and-execute、ReAct-style、reflexion 三种推理框架，并在必要时进行自治式重规划。请利用计划、行动观察、记忆和反思结果，给出结构清晰、适合初学者的答案。";
+    }
+
+    private String appendSkillConstraints(AgentRequest request, String prompt) {
+        String skill = BUILTIN_SKILLS.get(request.taskType());
+        if (!StringUtils.hasText(skill)) {
+            return prompt;
+        }
+        return prompt + "\n\n" + skill;
     }
 
     private String buildTaskSpecificInstruction(AgentRequest request) {

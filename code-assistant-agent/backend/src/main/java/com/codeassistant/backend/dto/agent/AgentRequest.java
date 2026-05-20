@@ -17,6 +17,7 @@ public record AgentRequest(
         String knowledgePoint,
         Integer practiceCount,
         Boolean enableReflexion,
-        List<String> selectedTools
+        List<String> selectedTools,
+        Long userId
 ) {
 }

@@ -161,7 +161,8 @@ public class ConversationContextServiceImpl implements ConversationContextServic
                 null,
                 null,
                 true,
-                request.selectedTools()
+                request.selectedTools(),
+                userId
         );
         AgentResponse response = agentService.execute(agentRequest);
 
